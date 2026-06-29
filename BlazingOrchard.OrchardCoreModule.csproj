@@ -29,6 +29,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="Themes/BlazingOrchard.Site/BlazingOrchard.Site.csproj" />
     <ProjectReference Include="../grove.workflows/src/modules/Grove.Workflows.Contents/Grove.Workflows.Contents.csproj" />
     <ProjectReference Include="../grove.workflows/src/modules/Grove.Workflows.Data/Grove.Workflows.Data.csproj" />
     <ProjectReference Include="../grove.workflows/src/modules/Grove.Workflows.Queries/Grove.Workflows.Queries.csproj" />
