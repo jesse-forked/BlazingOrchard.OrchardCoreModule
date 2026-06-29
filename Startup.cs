@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using OrchardCore.Modules;
 
-namespace BlazingOrchard.OrchardCoreModule;
+namespace BlazingOrchard;
 
 [Feature("Blazing")]
 public sealed class Startup : OrchardCore.Modules.StartupBase
