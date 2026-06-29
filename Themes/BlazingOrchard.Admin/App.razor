@@ -1,0 +1,17 @@
+@using Microsoft.AspNetCore.Components.Routing
+@using Radzen
+@using Radzen.Blazor
+
+<Router AppAssembly="@typeof(App).Assembly">
+    <Found Context="routeData">
+        <RouteView RouteData="@routeData" />
+    </Found>
+    <NotFound>
+        <LayoutView>
+            <RadzenStack Gap="1rem" Style="padding: 2rem;">
+                <RadzenText TextStyle="TextStyle.H4" Text="Blazing" />
+                <RadzenText Text="This Blazing route does not exist yet." />
+            </RadzenStack>
+        </LayoutView>
+    </NotFound>
+</Router>

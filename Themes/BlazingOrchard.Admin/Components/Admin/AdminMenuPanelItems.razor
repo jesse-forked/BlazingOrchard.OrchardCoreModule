@@ -1,0 +1,38 @@
+@using BlazingOrchard.Admin.DisplayManagement
+@using Radzen.Blazor
+
+@foreach (var item in Items)
+{
+    <RadzenPanelMenuItem Text="@item.Text"
+                         Path="@GetPath(item)"
+                         Target="@item.Target"
+                         Icon="@GetIcon(item)"
+                         Class="@GetItemClass()">
+        @if (item.HasChildren)
+        {
+            <AdminMenuPanelItems Items="item.Items" Level="@(Level + 1)" />
+        }
+    </RadzenPanelMenuItem>
+}
+
+@code {
+    [Parameter]
+    public DisplayMenuItem[] Items { get; set; } = [];
+
+    [Parameter]
+    public int Level { get; set; }
+
+    private static string? GetPath(DisplayMenuItem item)
+    {
+        if (item.HasChildren || !item.HasLink || item.Link == "#")
+        {
+            return null;
+        }
+
+        return item.Link;
+    }
+
+    private string? GetIcon(DisplayMenuItem item) => Level < 2 ? item.Icon : null;
+
+    private string GetItemClass() => $"admin-menu-sidebar__item admin-menu-sidebar__item--level-{Level}";
+}
