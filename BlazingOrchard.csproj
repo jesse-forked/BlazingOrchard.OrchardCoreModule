@@ -1,40 +1,26 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+<Project Sdk="Microsoft.NET.Sdk.Razor">
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
-    <AspNetCoreHostingModel>InProcess</AspNetCoreHostingModel>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
-    <UserSecretsId>blazing-orchard</UserSecretsId>
   </PropertyGroup>
-
-  <Target Name="EnsureWwwRootExists" BeforeTargets="Build;Publish">
-    <MakeDir Directories="$(MSBuildProjectDirectory)\wwwroot" />
-  </Target>
 
   <ItemGroup>
     <Compile Remove="Themes\**" />
     <Content Remove="Themes\**" />
     <EmbeddedResource Remove="Themes\**" />
     <None Remove="Themes\**" />
+    <RazorGenerate Remove="Themes\**" />
+    <RazorComponent Remove="Themes\**" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Data.Sqlite" />
-    <PackageReference Include="OrchardCore.Application.Cms.Targets" />
-    <PackageReference Include="OrchardCore.Logging.Serilog" />
+    <PackageReference Include="OrchardCore.Admin.Abstractions" />
+    <PackageReference Include="OrchardCore.ContentManagement" />
     <PackageReference Include="OrchardCore.Module.Targets" />
-    <PackageReference Include="Quartz" />
-    <PackageReference Include="SQLitePCLRaw.lib.e_sqlite3" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="Themes/BlazingOrchard.Site/BlazingOrchard.Site.csproj" />
-    <ProjectReference Include="../grove.workflows/src/modules/Grove.Workflows.Contents/Grove.Workflows.Contents.csproj" />
-    <ProjectReference Include="../grove.workflows/src/modules/Grove.Workflows.Data/Grove.Workflows.Data.csproj" />
-    <ProjectReference Include="../grove.workflows/src/modules/Grove.Workflows.Queries/Grove.Workflows.Queries.csproj" />
-    <ProjectReference Include="../grove.workflows/src/modules/Grove.Workflows.Timers/Grove.Workflows.Timers.csproj" />
-    <ProjectReference Include="../grove.workflows/src/modules/Grove.Workflows.UI/Grove.Workflows.UI.csproj" />
-    <ProjectReference Include="../grove.workflows/src/modules/Grove.Workflows/Grove.Workflows.csproj" />
+    <PackageReference Include="OrchardCore.Roles.Abstractions" />
+    <PackageReference Include="OrchardCore.Themes" />
+    <PackageReference Include="OrchardCore.Users" />
   </ItemGroup>
 </Project>

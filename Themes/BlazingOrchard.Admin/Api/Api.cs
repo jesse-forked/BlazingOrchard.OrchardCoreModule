@@ -25,6 +25,7 @@ public interface IRestApi
     IFeaturesApi Features { get; }
     IRolesApi Roles { get; }
     IThemeApi Theme { get; }
+    IThemesApi Themes { get; }
 }
 
 public interface IAppApi
@@ -83,6 +84,16 @@ public interface IThemeApi
     Task<BlazingThemeSettings> GetAsync();
 }
 
+public interface IThemesApi
+{
+    Task<ThemesState> ListAsync();
+    Task<bool> SetCurrentAsync(string id);
+    Task<bool> EnableAsync(string id);
+    Task<bool> DisableAsync(string id);
+    Task<bool> ResetSiteThemeAsync();
+    Task<bool> ResetAdminThemeAsync();
+}
+
 public sealed class Api(HttpClient http) : IApi
 {
     public IBlazingArea Blazing { get; } = new BlazingArea(http);
@@ -103,6 +114,7 @@ public sealed class RestApi(HttpClient http) : IRestApi
     public IFeaturesApi Features { get; } = new FeaturesApi(http);
     public IRolesApi Roles { get; } = new RolesApi(http);
     public IThemeApi Theme { get; } = new ThemeApi(http);
+    public IThemesApi Themes { get; } = new ThemesApi(http);
 }
 
 public sealed class AuthApi(HttpClient http) : IAuthApi
@@ -313,6 +325,39 @@ public sealed class ThemeApi(HttpClient http) : IThemeApi
     }
 }
 
+public sealed class ThemesApi(HttpClient http) : IThemesApi
+{
+    public async Task<ThemesState> ListAsync()
+    {
+        using var response = await http.SendAsync(WithCredentials(new(HttpMethod.Get, "api/blazing/themes")));
+        return response.IsSuccessStatusCode
+            ? await response.Content.ReadFromJsonAsync<ThemesState>() ?? ThemesState.Empty
+            : ThemesState.Empty;
+    }
+
+    public Task<bool> SetCurrentAsync(string id) => PostAsync($"api/blazing/themes/{Uri.EscapeDataString(id)}/current");
+
+    public Task<bool> EnableAsync(string id) => PostAsync($"api/blazing/themes/{Uri.EscapeDataString(id)}/enable");
+
+    public Task<bool> DisableAsync(string id) => PostAsync($"api/blazing/themes/{Uri.EscapeDataString(id)}/disable");
+
+    public Task<bool> ResetSiteThemeAsync() => PostAsync("api/blazing/themes/reset-site");
+
+    public Task<bool> ResetAdminThemeAsync() => PostAsync("api/blazing/themes/reset-admin");
+
+    private async Task<bool> PostAsync(string uri)
+    {
+        using var response = await http.SendAsync(WithCredentials(new(HttpMethod.Post, uri)));
+        return response.IsSuccessStatusCode;
+    }
+
+    private static HttpRequestMessage WithCredentials(HttpRequestMessage request)
+    {
+        request.SetBrowserRequestCredentials(BrowserRequestCredentials.Include);
+        return request;
+    }
+}
+
 public sealed record LoginModel(string UserName, string Password, bool RememberMe);
 
 public sealed record AuthUser(bool IsAuthenticated, string? UserName, string[] Roles)
@@ -433,6 +478,28 @@ public sealed record Feature(
     bool AlwaysEnabled);
 
 public sealed record Role(string Name, string Description, bool IsAdmin, bool IsSystem);
+
+public sealed record ThemesState(
+    string? CurrentSiteThemeId,
+    string? CurrentAdminThemeId,
+    ThemeSummary? CurrentSiteTheme,
+    ThemeSummary? CurrentAdminTheme,
+    ThemeSummary[] Themes)
+{
+    public static ThemesState Empty { get; } = new(null, null, null, null, []);
+}
+
+public sealed record ThemeSummary(
+    string Id,
+    string Name,
+    string Description,
+    string Author,
+    string Website,
+    string Version,
+    string ExtensionId,
+    bool IsAdmin,
+    bool IsCurrent,
+    bool Enabled);
 
 public sealed record BlazingThemeSettings(string RadzenTheme, Dictionary<string, string> Tokens)
 {
