@@ -6,7 +6,7 @@ using OrchardCore.Modules.Manifest;
     Name = "Blazing Orchard Site",
     Author = ManifestConstants.OrchardCoreTeam,
     Website = ManifestConstants.OrchardCoreWebsite,
-    Version = ManifestConstants.OrchardCoreVersion,
+    Version = "3.0.0.0.0",
     Description = "A regular Orchard Core site theme with content type, content menu, and site menu templates.",
     Tags = new[] { "Blog", "Bootstrap", "Liquid" }
 )]

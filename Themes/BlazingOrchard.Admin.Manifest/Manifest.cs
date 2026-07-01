@@ -8,5 +8,5 @@ using OrchardCore.DisplayManagement.Manifest;
     Website = "https://github.com/BlazingOrchard/Blazing-Orchard",
     Version = "3.0.0.0.0",
     Description = "A Blazor WebAssembly admin theme for Orchard Core using Radzen components.",
-    Tags = ["admin", "blazor", "radzen"]
+    Tags = new[] { "admin", "blazor", "radzen" }
 )]

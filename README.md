@@ -2,6 +2,29 @@
 
 BlazingOrchard is an Orchard Core module/theme package. It plugs into an Orchard host and provides a Blazor-based admin shell, but Orchard remains the authority for tenants, users, permissions, content, features, settings, themes, and navigation.
 
+## Versioning
+
+BlazingOrchard uses a five-part compatibility version:
+
+```text
+{orchard-major}.{orchard-minor}.{orchard-patch}.{blazing-security}.{blazing-bug}
+```
+
+The first three parts identify the Orchard Core version that this BlazingOrchard build has been tested against. The last two parts are owned by BlazingOrchard.
+
+Examples:
+
+- `3.0.0.0.0` - initial BlazingOrchard release for Orchard Core `3.0.0`.
+- `3.0.0.0.1` - BlazingOrchard bug fix for Orchard Core `3.0.0`.
+- `3.0.0.1.2` - BlazingOrchard security fix `1` and bug fix `2` for Orchard Core `3.0.0`.
+- `3.0.1.2.1` - tested against Orchard Core `3.0.1`, carrying BlazingOrchard security line `2` and bug line `1`.
+
+When the Orchard Core compatibility line moves to a new main release, the BlazingOrchard-owned counters reset to `.0.0`.
+
+Current compatibility version: `3.0.0.0.0`.
+
+The Orchard manifests use the five-part version. .NET assembly and NuGet-compatible package properties keep their required SemVer/assembly-safe forms, with the five-part value stored as `AssemblyInformationalVersion` / `BlazingOrchardVersion`.
+
 ## API strategy
 
 Do not build a parallel admin API when Orchard already provides one.

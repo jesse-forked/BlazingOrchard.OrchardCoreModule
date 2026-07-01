@@ -39,7 +39,8 @@ public sealed class ThemesController(
                 feature,
                 IsAdminTheme(feature.Extension.Manifest),
                 enabledIds.Contains(feature.Id),
-                string.Equals(feature.Id, IsAdminTheme(feature.Extension.Manifest) ? currentAdminTheme?.Id : currentSiteTheme?.Id, StringComparison.OrdinalIgnoreCase)))
+                string.Equals(feature.Id, IsAdminTheme(feature.Extension.Manifest) ? currentAdminTheme?.Id : currentSiteTheme?.Id, StringComparison.OrdinalIgnoreCase),
+                GetThemeImageUrl(feature)))
             .OrderByDescending(theme => theme.IsCurrent)
             .ThenBy(theme => theme.IsAdmin)
             .ThenBy(theme => theme.Name)
@@ -160,6 +161,8 @@ public sealed class ThemesController(
 
     private static bool IsAdminTheme(IManifestInfo manifest) => manifest.Tags
         .Any(tag => string.Equals(tag, ManifestConstants.AdminTag, StringComparison.OrdinalIgnoreCase));
+
+    private static string GetThemeImageUrl(IFeatureInfo feature) => $"/{feature.Extension.Id}/Theme.png";
 }
 
 public sealed record ThemesState(
@@ -179,9 +182,10 @@ public sealed record ThemeSummary(
     string ExtensionId,
     bool IsAdmin,
     bool IsCurrent,
-    bool Enabled)
+    bool Enabled,
+    string PreviewImageUrl)
 {
-    public static ThemeSummary From(IFeatureInfo feature, bool isAdmin, bool enabled, bool isCurrent) => new(
+    public static ThemeSummary From(IFeatureInfo feature, bool isAdmin, bool enabled, bool isCurrent, string previewImageUrl) => new(
         feature.Id,
         feature.Name ?? feature.Id,
         feature.Description ?? string.Empty,
@@ -191,5 +195,6 @@ public sealed record ThemeSummary(
         feature.Extension.Id,
         isAdmin,
         isCurrent,
-        enabled);
+        enabled,
+        previewImageUrl);
 }

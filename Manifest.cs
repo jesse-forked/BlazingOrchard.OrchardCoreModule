@@ -4,7 +4,7 @@ using OrchardCore.Modules.Manifest;
     Name = "Blazing Server",
     Author = "Blazing",
     Website = "https://blazing.local",
-    Version = "1.0.0",
+    Version = "3.0.0.0.0",
     Description = "Provides Blazing tenant APIs and server-side Orchard integrations.",
     Category = "Blazing"
 )]

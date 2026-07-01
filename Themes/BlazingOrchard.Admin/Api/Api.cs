@@ -499,7 +499,8 @@ public sealed record ThemeSummary(
     string ExtensionId,
     bool IsAdmin,
     bool IsCurrent,
-    bool Enabled);
+    bool Enabled,
+    string PreviewImageUrl);
 
 public sealed record BlazingThemeSettings(string RadzenTheme, Dictionary<string, string> Tokens)
 {

@@ -25,6 +25,7 @@ public sealed class BlazorAdminThemeMiddleware
 {
     private static readonly PathString FrameworkPath = new("/_framework");
     private static readonly PathString ContentPath = new("/_content");
+    private static readonly PathString BlazingAdminThemePreviewPath = new("/BlazingOrchard.Admin/Theme.png");
 
     private readonly RequestDelegate _next;
     private readonly IHostEnvironment _environment;
@@ -52,9 +53,25 @@ public sealed class BlazorAdminThemeMiddleware
 
         var isAdminRoute = requestPath.StartsWithSegments(adminPath, out var adminRemainder);
         var isBlazorAssetRoute = IsBlazorAssetRoute(requestPath);
+        var isBlazingAdminThemePreviewRoute = requestPath.Equals(BlazingAdminThemePreviewPath);
 
-        if (!isAdminRoute && !isBlazorAssetRoute)
+        if (!isAdminRoute && !isBlazorAssetRoute && !isBlazingAdminThemePreviewRoute)
         {
+            await _next(context);
+            return;
+        }
+
+        var webRoots = ResolveAdminThemeWebRoots(options).ToArray();
+        if (isBlazingAdminThemePreviewRoute)
+        {
+            foreach (var webRoot in webRoots)
+            {
+                if (await TryServeFileAsync(context, webRoot, "Theme.png"))
+                {
+                    return;
+                }
+            }
+
             await _next(context);
             return;
         }
@@ -65,7 +82,6 @@ public sealed class BlazorAdminThemeMiddleware
             return;
         }
 
-        var webRoots = ResolveAdminThemeWebRoots(options).ToArray();
         if (webRoots.Length == 0)
         {
             _logger.LogWarning("Blazor admin theme web roots were not found. Letting Orchard handle {Path}.", requestPath);
