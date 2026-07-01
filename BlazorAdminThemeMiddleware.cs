@@ -19,6 +19,16 @@ public sealed class BlazorAdminThemeOptions
     public string BlazorAdminThemeId { get; set; } = "BlazingOrchard.Admin";
     public string AdminThemeSourceWebRoot { get; set; } = "modules/BlazingOrchard/Themes/BlazingOrchard.Admin/wwwroot";
     public string AdminThemeBuildWebRoot { get; set; } = "modules/BlazingOrchard/Themes/BlazingOrchard.Admin/bin/BlazingOrchard.Admin/Debug/net10.0/wwwroot";
+    public HashSet<string> BlazorRoutes { get; set; } = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "/admin",
+        "/admin/themes",
+    };
+
+    public string[] BlazorRouteSourceDirectories { get; set; } =
+    [
+        "modules/BlazingOrchard/Themes/BlazingOrchard.Admin/Pages",
+    ];
 }
 
 public sealed class BlazorAdminThemeMiddleware
@@ -32,6 +42,8 @@ public sealed class BlazorAdminThemeMiddleware
     private readonly IOptions<BlazorAdminThemeOptions> _options;
     private readonly FileExtensionContentTypeProvider _contentTypes = new();
     private readonly ILogger<BlazorAdminThemeMiddleware> _logger;
+    private readonly object _blazorRoutesLock = new();
+    private HashSet<string>? _blazorRoutes;
 
     public BlazorAdminThemeMiddleware(
         RequestDelegate next,
@@ -47,6 +59,12 @@ public sealed class BlazorAdminThemeMiddleware
 
     public async Task InvokeAsync(HttpContext context)
     {
+        if (LegacyFrameThemeSelector.IsLegacyFrameRequest(context))
+        {
+            await _next(context);
+            return;
+        }
+
         var requestPath = context.Request.Path;
         var options = _options.Value;
         var adminPath = new PathString(options.AdminPath);
@@ -106,18 +124,6 @@ public sealed class BlazorAdminThemeMiddleware
             }
         }
 
-        // Deep links under /admin should still load the Blazor shell.
-        if (isAdminRoute)
-        {
-            foreach (var webRoot in webRoots)
-            {
-                if (await TryServeFileAsync(context, webRoot, "index.html"))
-                {
-                    return;
-                }
-            }
-        }
-
         await _next(context);
     }
 
@@ -136,6 +142,96 @@ public sealed class BlazorAdminThemeMiddleware
     {
         var value = adminRemainder.Value?.TrimStart('/') ?? string.Empty;
         return string.IsNullOrEmpty(value) ? "index.html" : value;
+    }
+
+    private static bool IsPageRequest(PathString requestPath)
+    {
+        var value = requestPath.Value;
+        return string.IsNullOrEmpty(value) || !Path.HasExtension(value);
+    }
+
+    private bool IsBlazorRoute(BlazorAdminThemeOptions options, PathString requestPath)
+    {
+        var normalized = NormalizeRoute(requestPath.Value);
+        return ResolveBlazorRoutes(options).Contains(normalized);
+    }
+
+    private HashSet<string> ResolveBlazorRoutes(BlazorAdminThemeOptions options)
+    {
+        if (_blazorRoutes is not null)
+        {
+            return _blazorRoutes;
+        }
+
+        lock (_blazorRoutesLock)
+        {
+            if (_blazorRoutes is not null)
+            {
+                return _blazorRoutes;
+            }
+
+            var routes = new HashSet<string>(options.BlazorRoutes.Select(NormalizeRoute), StringComparer.OrdinalIgnoreCase);
+
+            foreach (var sourceDirectory in ResolveBlazorRouteSourceDirectories(options))
+            {
+                foreach (var route in DiscoverRazorPageRoutes(sourceDirectory))
+                {
+                    routes.Add(route);
+                }
+            }
+
+            _logger.LogInformation("Blazor admin routes: {Routes}", string.Join(", ", routes.Order(StringComparer.OrdinalIgnoreCase)));
+            _blazorRoutes = routes;
+            return routes;
+        }
+    }
+
+    private IEnumerable<string> ResolveBlazorRouteSourceDirectories(BlazorAdminThemeOptions options)
+    {
+        foreach (var routeSource in options.BlazorRouteSourceDirectories)
+        {
+            yield return Path.Combine(_environment.ContentRootPath, routeSource);
+            yield return Path.Combine(AppContext.BaseDirectory, routeSource);
+        }
+    }
+
+    private static IEnumerable<string> DiscoverRazorPageRoutes(string sourceDirectory)
+    {
+        if (!Directory.Exists(sourceDirectory))
+        {
+            yield break;
+        }
+
+        foreach (var file in Directory.EnumerateFiles(sourceDirectory, "*.razor", SearchOption.AllDirectories))
+        {
+            foreach (var line in File.ReadLines(file))
+            {
+                var trimmed = line.Trim();
+                if (!trimmed.StartsWith("@page", StringComparison.Ordinal))
+                {
+                    continue;
+                }
+
+                var firstQuote = trimmed.IndexOf('"');
+                var lastQuote = trimmed.LastIndexOf('"');
+                if (firstQuote < 0 || lastQuote <= firstQuote)
+                {
+                    continue;
+                }
+
+                yield return NormalizeRoute(trimmed[(firstQuote + 1)..lastQuote]);
+            }
+        }
+    }
+
+    private static string NormalizeRoute(string? route)
+    {
+        if (string.IsNullOrWhiteSpace(route) || route == "/")
+        {
+            return "/";
+        }
+
+        return "/" + route.Trim('/').ToLowerInvariant();
     }
 
     private async Task<bool> IsBlazorAdminThemeAsync(HttpContext context, BlazorAdminThemeOptions options, PathString requestPath)
